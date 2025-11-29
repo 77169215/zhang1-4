@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>你好呀</title>
+    <style>
+        /*--------- 预载遮罩 ---------*/
+        #startMask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        #startBtn {
+            padding: 16px 40px;
+            font-size: 26px;
+            font-family: "幼圆",sans-serif;
+            color: #fff;
+            background: #ff6685;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: .3s;
+        }
+        #startBtn:hover { background: #ff4a6c; }
+
+        /*--------- 背景音乐控制 ---------*/
+        .music-control {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            z-index: 3000;
+            box-shadow: 0 2px 10px rgba(0,0,0,.2);
+            transition: .3s;
+        }
+        .music-control:hover { background: #fff; }
+        .music-control.playing { background: #4caf50; color: #fff; }
+
+        /*--------- 弹窗样式 ---------*/
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: url("zhang1.jpg") center/cover no-repeat;
+            font-family: "幼圆",sans-serif;
+        }
+        .blessing-window {
+            position: fixed;
+            width: 330px;
+            height: 80px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            font-size: 20px;
+            z-index: 1000;
+        }
+        .close-btn {
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            opacity: .7;
+            transition: opacity .2s;
+        }
+        .close-btn:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <!-- ====== 1. 音频 ====== -->
+    <audio id="bgMusic" loop>
+        <source src="bg.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- ====== 2. 开始遮罩 ====== -->
+    <div id="startMask">
+        <button id="startBtn">好师傅，点这里 ♪</button>
+    </div>
+
+    <!-- ====== 3. 音乐控制按钮（初始隐藏） ====== -->
+    <div class="music-control" id="musicControl" style="display:none" title="播放/暂停">
+        <span id="musicIcon">▶</span>
+    </div>
+
+    <script>
+        /* ---------------- 音乐相关 ---------------- */
+        const bgMusic   = document.getElementById('bgMusic');
+        const ctrl      = document.getElementById('musicControl');
+        const icon      = document.getElementById('musicIcon');
+        bgMusic.volume  = .3;
+
+        let playing = false;
+        ctrl.addEventListener('click', () => {
+            if (playing) {
+                bgMusic.pause();
+                icon.textContent = '▶';
+                ctrl.classList.remove('playing');
+            } else {
+                bgMusic.play();
+                icon.textContent = '❚❚';
+                ctrl.classList.add('playing');
+            }
+            playing = !playing;
+        });
+
+        /* 第一次点击按钮：解锁音频并进入主场景 */
+        document.getElementById('startBtn').addEventListener('click', () => {
+            // 解锁声音
+            bgMusic.play().catch(err => console.log('播放失败:', err));
+            playing = true;
+            icon.textContent = '❚❚';
+            ctrl.classList.add('playing');
+
+            // 移除遮罩，显示控制按钮
+            document.getElementById('startMask').style.display = 'none';
+            ctrl.style.display = 'flex';
+
+            // 开始下弹窗雨
+            startBlessingRain();
+        });
+
+        /* ---------------- 弹窗雨逻辑 ---------------- */
+        function getColor() {
+            const r = Math.floor(Math.random() * 126) + 100;
+            const g = Math.floor(Math.random() * 126) + 100;
+            const b = Math.floor(Math.random() * 126) + 100;
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        function getPosition() {
+            const W = window.innerWidth, H = window.innerHeight;
+            return {
+                x: Math.floor(Math.random() * (W - 330)),
+                y: Math.floor(Math.random() * (H - 80))
+            };
+        }
+        const blessings = [
+            "一起玩燕云","来打本","我喜欢你！！","在刷抖音,但是偷偷想你","打完架记得想我","最最喜欢你了",
+            "跟我开房嘛","偷偷视奸你","我受你一辈子哇"
+        ];
+        function createWindow() {
+            const win = document.createElement('div');
+            win.className = 'blessing-window';
+            const pos = getPosition();
+            win.style.left = `${pos.x}px`;
+            win.style.top  = `${pos.y}px`;
+            win.style.backgroundColor = getColor();
+
+            const txt = document.createElement('span');
+            txt.textContent = blessings[Math.floor(Math.random() * blessings.length)];
+            win.appendChild(txt);
+
+            const closeBtn = document.createElement('span');
+            closeBtn.className = 'close-btn';
+            closeBtn.textContent = '×';
+            closeBtn.onclick = () => document.body.removeChild(win);
+            win.appendChild(closeBtn);
+
+            document.body.appendChild(win);
+            setTimeout(() => { if (document.body.contains(win)) document.body.removeChild(win); }, 5000);
+        }
+
+        function startBlessingRain() {
+            let count = 0;
+            const timer = setInterval(() => {
+                createWindow();
+                count++;
+                if (count >= 120) clearInterval(timer);
+            }, 10);
+        }
+    </script>
+</body>
+</html>
